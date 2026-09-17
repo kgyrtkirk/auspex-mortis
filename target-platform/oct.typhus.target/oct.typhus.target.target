@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="oct.typhus.target" sequenceNumber="1">
+  <locations>
+    <!-- Only the platform, not the SDK: the tools need the runtime, the workbench and
+         SWT to reach the open editors, and nothing of JDT or PDE. -->
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="org.eclipse.platform.feature.group" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/releases/2026-09/"/>
+    </location>
+    <!-- Memory Analyzer. The version must be the one the target IDE runs, because the
+         snapshot is handed over in process: a mismatch resolves and then fails on a
+         class it cannot share. -->
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="org.eclipse.mat.feature.feature.group" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/mat/1.17.0/update-site/"/>
+    </location>
+    <!-- The MCP server whose tools extension point this plug-in contributes to. -->
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="com.vogella.eclipse.mcp.feature.feature.group" version="0.0.0"/>
+      <repository location="https://vogellacompany.github.io/eclipse-mcp-server/"/>
+    </location>
+    <!-- JUnit for the test fragment, pinned to 5.x: the train also ships JUnit 6, and
+         tycho-surefire's junit5 provider is what runs these. -->
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="junit-jupiter-api" version="5.14.4"/>
+      <unit id="junit-jupiter-engine" version="5.14.4"/>
+      <unit id="junit-platform-launcher" version="1.14.4"/>
+      <!-- tycho-surefire's junit5 provider imports the suite and parameter packages even
+           when no suite and no parameterized test is used -->
+      <unit id="junit-platform-suite-api" version="1.14.4"/>
+      <unit id="junit-platform-suite-engine" version="1.14.4"/>
+      <unit id="junit-jupiter-params" version="5.14.4"/>
+      <repository location="https://download.eclipse.org/releases/2026-09/"/>
+    </location>
+  </locations>
+</target>

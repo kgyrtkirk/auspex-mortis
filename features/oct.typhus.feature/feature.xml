@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="oct.typhus.feature"
+      label="Typhus MAT Tools"
+      version="0.1.0.qualifier"
+      provider-name="Octavian"
+      plugin="oct.typhus.mat">
+
+   <description>
+      MCP tools that answer questions about a heap dump already open in Memory
+      Analyzer through its API instead of its user interface: run a query and get
+      rows, read one object, and write a filtered part of the object graph to a
+      file. Read-only against the snapshot.
+   </description>
+
+   <license url="https://www.eclipse.org/legal/epl-2.0/">
+      Eclipse Public License 2.0
+   </license>
+
+   <requires>
+      <import plugin="com.vogella.eclipse.mcp.core" version="0.2.0" match="compatible"/>
+      <import plugin="org.eclipse.mat.api" version="1.17.0" match="compatible"/>
+      <import plugin="org.eclipse.mat.report" version="1.17.0" match="compatible"/>
+      <import plugin="org.eclipse.mat.ui" version="1.17.0" match="compatible"/>
+   </requires>
+
+   <plugin id="oct.typhus.mat" download-size="0" install-size="0" version="0.0.0" unpack="false"/>
+
+</feature>

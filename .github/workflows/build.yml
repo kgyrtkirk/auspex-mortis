@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# a second push to the same branch makes the first build's answer worthless
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          # the MCP server and its tools are compiled for JavaSE-25, and Tycho resolves
+          # the target platform against that execution environment
+          java-version: '25'
+          # caches ~/.m2/repository, which holds Tycho's p2 cache as well: without it
+          # every build downloads the platform, MAT and the MCP server again
+          cache: maven
+
+      - name: Build and test
+        run: mvn -B clean verify
+
+      - name: Keep the test output of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: |
+            tests/*/target/surefire-reports/**
+            tests/*/target/work/data/.metadata/.log
+          if-no-files-found: ignore
+
+      - name: Publish the update site
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-site
+          path: update-site/oct.typhus.repository/target/repository
