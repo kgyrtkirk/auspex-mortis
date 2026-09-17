@@ -2,7 +2,7 @@
 <feature
       id="oct.typhus.feature"
       label="Typhus MAT Tools"
-      version="0.2.0.qualifier"
+      version="0.3.0.qualifier"
       provider-name="Octavian"
       plugin="oct.typhus.mat">
 

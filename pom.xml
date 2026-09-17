@@ -6,7 +6,7 @@
 
   <groupId>oct.typhus</groupId>
   <artifactId>oct.typhus.parent</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Typhus MAT tools for the Eclipse MCP server</name>

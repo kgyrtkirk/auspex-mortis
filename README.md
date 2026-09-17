@@ -30,6 +30,32 @@ fronted; the clipboard is untouched.
 All three are read-only against the snapshot. `mat_extract` writes a file and therefore
 **defaults to a dry run**.
 
+## 🪟 Panes — the point of running in the IDE
+
+Every reading tool opens its result as an ordinary MAT pane by default (`show`). This is
+not a concession: an agent that keeps the answer to itself leaves the person at the IDE
+nothing to continue from. The pane holds the **same result object** the JSON rows were
+rendered from — one execution, two readers — so "the top 20 by retained heap" is literally
+the table on screen, sorting included.
+
+* `sortBy` / `desc` order through MAT's own `RefinedResultBuilder`. The ordered result is
+  what both the rows and the pane are built from; direction defaults to MAT's rule per
+  column, numbers descending and text ascending.
+* `title` names the tab. Without it the command line is used, cut to 60 characters, which
+  beats a tab labelled with a whole SQL statement. The pane's *identifier* stays the real
+  command, so MAT can still re-run it.
+* A `calcite "…"` query opens the **Calcite plug-in's own pane**, statement in its editor
+  and result beneath, so it can be changed and re-run by hand. That plug-in exports
+  `com.github.vlsi.mat.calcite` and `.functions` but not the package its pane lives in, so
+  `getQueryString()` and `initQueryResult(…)` are reached **by reflection**, both resolved
+  before anything is added to the editor. A version that no longer has them logs a warning
+  and falls back to the plain result pane. Exporting that package upstream would remove the
+  reflection entirely.
+
+Without this, running `calcite "…"` from MAT's own query browser has the same gap: panes
+are chosen by result *type*, and the SQL editor only exists in the pane its toolbar button
+opens.
+
 ### 🧭 Rules they all follow
 
 * **Never open or parse a dump.** An unknown dump is an error that lists what is open.
@@ -107,8 +133,10 @@ artifact and the surefire output kept when a run fails.
 
 ## 🕳️ Known gaps
 
-* **Not yet run against a dump.** It compiles, packages and passes its tests; the tools have
-  not been exercised in a live IDE.
+* **The Calcite pane is held by reflection** — see above. It degrades to the plain pane and
+  says so in the log, but it is the one place a Calcite plug-in upgrade can break this.
+* **Nothing verifies the panes automatically.** Whether a pane opened, and what it shows, is
+  checked by a person looking at the IDE; the tests cover the rows and the contracts.
 * **Nothing that needs a snapshot is tested** — `GraphExtract`'s walk and writer, and both
   object and query tools end to end. That needs a small dump committed as a fixture, or a
   fake `ISnapshot`, and neither is free.

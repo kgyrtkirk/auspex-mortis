@@ -80,6 +80,24 @@ class ToolContractTest {
 		Map<?, ?> properties = (Map<?, ?>) schemaOf(new MatQueryTool()).get("properties");
 		assertTrue(properties.containsKey("sortBy"));
 		assertTrue(properties.containsKey("desc"));
+		assertTrue(properties.containsKey("title"));
+	}
+
+	/** A tab shows a name, not a statement. */
+	@Test
+	void aPaneTitleIsShortAndTheCallerMayChooseIt() {
+		assertEquals("byte[] over 50 MB", MatQueryTool.paneTitle("calcite \"select …\"", "byte[] over 50 MB"));
+		assertEquals("histogram", MatQueryTool.paneTitle("histogram", null));
+		String statement = "calcite \"select getAddress(this) addr, shallowSize(this) bytes from \\\"byte[]\\\" where shallowSize(this) > 50000000\"";
+		String title = MatQueryTool.paneTitle(statement, null);
+		assertEquals(60, title.length());
+		assertTrue(title.endsWith("…"));
+	}
+
+	/** Newlines in a statement would otherwise break the tab. */
+	@Test
+	void aPaneTitleIsOneLine() {
+		assertEquals("calcite \"select 1\"", MatQueryTool.paneTitle("calcite\n  \"select 1\"", null));
 	}
 
 	/** The description is the only place the model learns what a tool costs and refuses to do. */

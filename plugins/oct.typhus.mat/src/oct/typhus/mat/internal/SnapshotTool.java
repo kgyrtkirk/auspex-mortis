@@ -4,14 +4,11 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.mat.SnapshotException;
-import org.eclipse.mat.query.registry.QueryResult;
-import org.eclipse.mat.ui.QueryExecution;
 
 import com.vogella.eclipse.mcp.core.IMcpTool;
 import com.vogella.eclipse.mcp.core.McpToolException;
 import com.vogella.eclipse.mcp.core.McpToolResult;
 import com.vogella.eclipse.mcp.core.ToolArguments;
-import com.vogella.eclipse.mcp.core.UiDispatch;
 import com.vogella.eclipse.mcp.core.json.JsonObject;
 
 import oct.typhus.mat.internal.OpenSnapshots.Dump;
@@ -27,9 +24,6 @@ abstract class SnapshotTool implements IMcpTool {
 	/** The {@code dump} property, for the input schema of every subclass. */
 	protected static final String DUMP_PROPERTY = """
 			"dump": {"type":"string","description":"Which open heap dump to work on, as its path or any trailing part of it. Only needed when more than one is open; the error lists them."}""";
-
-	/** How long the workbench may take to open a pane before the tool stops waiting for it. */
-	private static final int UI_TIMEOUT_SECONDS = 20;
 
 	@Override
 	public final McpToolResult call(Map<String, Object> arguments, IProgressMonitor monitor) throws McpToolException {
@@ -65,30 +59,6 @@ abstract class SnapshotTool implements IMcpTool {
 	 */
 	protected abstract JsonObject run(Dump dump, Map<String, Object> arguments, IProgressMonitor monitor)
 			throws McpToolException, SnapshotException, BadRequestException;
-
-	/**
-	 * Puts a result in front of the person at the IDE, as the pane Memory Analyzer would
-	 * have opened for it, and records in {@code into} whether that worked.
-	 * <p>
-	 * Never throws: the rows are the answer and a pane that failed to open must not take
-	 * them down with it. The pane is the same object the query already produced, so this
-	 * costs a redraw, not a second execution.
-	 */
-	protected static void show(Dump dump, QueryResult result, JsonObject into) {
-		if (result == null) {
-			into.put("shownInIde", Boolean.FALSE).put("showError", "The query produced no result to show.");
-			return;
-		}
-		try {
-			UiDispatch.call(() -> {
-				QueryExecution.displayResult(dump.editor(), null, null, result, true);
-				return null;
-			}, UI_TIMEOUT_SECONDS);
-			into.put("shownInIde", Boolean.TRUE);
-		} catch (Exception e) {
-			into.put("shownInIde", Boolean.FALSE).put("showError", String.valueOf(e.getMessage()));
-		}
-	}
 
 	/** The message of {@code e} and of its cause, because MAT often carries the detail there. */
 	private static String message(SnapshotException e) {

@@ -26,6 +26,9 @@ public final class MatQueryTool extends SnapshotTool {
 
 	private static final int DEFAULT_CHILD_LIMIT = 20;
 
+	/** Roughly what fits on a tab before the rest is unreadable anyway. */
+	private static final int MAX_TITLE = 60;
+
 	@Override
 	public String getName() {
 		return "mat_query";
@@ -50,7 +53,8 @@ public final class MatQueryTool extends SnapshotTool {
 				    "childLimit": {"type":"integer","default":20,"minimum":1,"maximum":1000,"description":"Children rendered per expanded tree node."},
 				    "show":       {"type":"boolean","default":true,"description":"Also open the result as an ordinary MAT pane in the heap editor, so the person at the IDE can carry on from it by hand. Pass false for a probe whose pane would only be noise."},
 				    "sortBy":     {"type":"string","description":"Order by this column, named exactly as the column label reads, e.g. 'Retained Heap'. This is what makes 'histogram' answer 'the biggest classes' instead of MAT's natural order. COSTS a full materialization of the result, so bound a huge one with the query first."},
-				    "desc":       {"type":"boolean","description":"Descending. Left out, MAT decides per column: numbers descend, text ascends."}
+				    "desc":       {"type":"boolean","description":"Descending. Left out, MAT decides per column: numbers descend, text ascends."},
+				    "title":      {"type":"string","description":"What the tab should read, e.g. 'byte[] over 50 MB'. Without it the command line is used, cut to fit, which makes a poor tab for a long SQL statement. The pane still re-runs the real command."}
 				  },
 				  "required": ["query"],
 				  "additionalProperties": false
@@ -75,9 +79,24 @@ public final class MatQueryTool extends SnapshotTool {
 				.render(answer == null ? null : answer.getSubject(), id -> Addresses.of(dump.snapshot(), id), limits)
 				.put("query", query);
 		if (args.getBoolean("show", true)) {
-			show(dump, answer, rendered);
+			ResultPanes.show(dump, answer, paneTitle(query, args.getString("title")), rendered);
 		}
 		return rendered;
+	}
+
+	/**
+	 * What the tab reads.
+	 * <p>
+	 * A whole SQL statement makes a useless tab, so a caller may name the pane after the
+	 * question it answers; without one the command line is cut to something that still fits
+	 * on a tab. The pane's identifier stays the command either way, so MAT can still re-run it.
+	 */
+	static String paneTitle(String command, String given) {
+		if (given != null) {
+			return given;
+		}
+		String line = command.replaceAll("\\s+", " ").trim();
+		return line.length() <= MAX_TITLE ? line : line.substring(0, MAX_TITLE - 1) + "…";
 	}
 
 	/**

@@ -90,10 +90,17 @@ public final class MatObjectTool extends SnapshotTool {
 			// a second, one-object execution rather than a rendering of what is above:
 			// what the person at the IDE wants to carry on from is MAT's own expandable
 			// object tree, and list_objects is the query that produces it
-			show(dump, CommandLine.parse(dump.context(), "list_objects " + Addresses.format(object.getObjectAddress()))
-					.execute(new MonitorListener(monitor)), result);
+			String address = Addresses.format(object.getObjectAddress());
+			ResultPanes.show(dump, CommandLine.parse(dump.context(), "list_objects " + address)
+					.execute(new MonitorListener(monitor)), paneTitle(object, address), result);
 		}
 		return result;
+	}
+
+	/** The simple class name and the address, because a tab full of package names says nothing. */
+	private static String paneTitle(IObject object, String address) {
+		String className = object.getClazz().getName();
+		return className.substring(className.lastIndexOf('.') + 1) + " " + address;
 	}
 
 	private static int objectId(ISnapshot snapshot, ToolArguments args) throws BadRequestException {
