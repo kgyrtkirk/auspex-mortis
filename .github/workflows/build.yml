@@ -1,15 +1,18 @@
 name: build
 
+# the core: builds, tests and packages the update site. Pull requests run it directly;
+# pages.yml calls it before publishing, so what is deployed is exactly what was tested
 on:
-  push:
-    branches: [main]
   pull_request:
-  workflow_dispatch:
+  workflow_call:
 
-# a second push to the same branch makes the first build's answer worthless
+# its own group: a called workflow sharing the caller's group would wait on itself
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -41,8 +44,9 @@ jobs:
             tests/*/target/work/data/.metadata/.log
           if-no-files-found: ignore
 
-      - name: Publish the update site
-        uses: actions/upload-artifact@v4
+      # the p2 repository in the shape GitHub Pages deploys; on a pull request it is
+      # simply the build output, downloadable for trying the change
+      - name: Package the update site
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: update-site
           path: update-site/hu.rxd.auspex.mortis.repository/target/repository

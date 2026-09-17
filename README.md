@@ -6,7 +6,8 @@ through MAT's API instead of its user interface. They contribute to the
 [Eclipse MCP server](https://github.com/vogellacompany/eclipse-mcp-server), so they appear
 next to its own `eclipse_*` tools in any MCP client connected to the IDE.
 
-Standalone: nothing here depends on the repository it currently sits in.
+Home: <https://github.com/kgyrtkirk/auspex-mortis> · update site:
+`https://kgyrtkirk.github.io/auspex-mortis/`
 
 ## 🎯 Why
 
@@ -15,9 +16,9 @@ still cannot read the numbers: the widget tree exposes **column 0 only**, so eve
 count, shallow size and retained size stays invisible. Bulk data cannot leave a dump at all —
 MAT's CSV and HTML exports are JFace actions with no command behind them.
 
-Running the same queries through `SnapshotQuery` in the IDE's own process removes all of it
-at once: every column comes back, unformatted, as JSON; no tab is opened; no window is
-fronted; the clipboard is untouched.
+Running the same queries through MAT's API in the IDE's own process removes all of it at
+once: every column comes back, unformatted, as JSON; no window is fronted; the clipboard is
+untouched. The result pane still opens — on purpose, see below.
 
 ## 🔧 The tools
 
@@ -84,18 +85,35 @@ compiled against a different MAT resolves and then fails on a class the two cann
 
 ## 📥 Install
 
+**Update site: `https://kgyrtkirk.github.io/auspex-mortis/`** — published from `main` by
+GitHub Actions, so it always carries the last build that passed its tests.
+
+Needs, in the same IDE: the [Eclipse MCP server](https://vogellacompany.github.io/eclipse-mcp-server/)
+and Memory Analyzer **1.17**. The [Calcite plug-in](https://vlsi.github.io/mat-calcite-plugin-update-site/stable/)
+is optional; with it, `calcite "…"` queries open in its SQL editor pane.
+
+By hand: *Help → Install New Software… → Add…* → the URL above → **Auspex Mortis**. Restart.
+
+From an agent, over the MCP server:
+
 ```
-eclipse_add_repository  url: file:/…/auspex-mortis/update-site/hu.rxd.auspex.mortis.repository/target/repository, dryRun: false
+eclipse_add_repository  url: https://kgyrtkirk.github.io/auspex-mortis/, dryRun: false
 eclipse_install         unit: hu.rxd.auspex.mortis.feature.feature.group, wait: true
 eclipse_restart
 ```
 
+A local build installs the same way, from
+`file:/…/auspex-mortis/update-site/hu.rxd.auspex.mortis.repository/target/repository`. Bump the
+version first: p2 treats a rebuilt `0.4.0` as the thing it already has.
+
 **The restart is not optional.** `McpToolRegistry` reads the extension point once and caches
 it for the life of the IDE — nothing calls its `reset()` — so a newly installed tool is
 invisible until the IDE comes back up. `eclipse_install_bundle` is worse than useless here:
-a hot-installed bundle does not survive the restart that would publish it.
+a hot-installed bundle does not survive the restart that would publish it. The restart also
+closes any open heap dump, because MAT's editor input cannot be persisted: reopen it by hand.
 
-The MCP client also has to re-list the tools afterwards, which usually means a new session.
+The MCP client picks the new tools up when it reconnects. Its copy of a tool's schema can lag
+behind; that is harmless, because the server validates the arguments.
 
 ## 📤 What `mat_extract` writes
 
@@ -127,9 +145,23 @@ implementations, and the schema and naming contract every tool owes the server.
 `ResultJson` takes an id-to-address function rather than the snapshot for exactly this
 reason: it is the only thing it needed a snapshot for.
 
-CI is GitHub Actions, [`.github/workflows/build.yml`](.github/workflows/build.yml): JDK 25,
-`mvn -B clean verify`, the Maven cache carrying Tycho's p2 cache, the update site as an
-artifact and the surefire output kept when a run fails.
+## ⚙️ CI and publishing
+
+GitHub Actions, two workflows:
+
+* [`build.yml`](.github/workflows/build.yml) — the core: JDK 25, `mvn -B clean verify`, the
+  Maven cache carrying Tycho's p2 cache, surefire output kept when a run fails, the update
+  site packaged as an artifact. Pull requests run it directly.
+* [`pages.yml`](.github/workflows/pages.yml) — on every push to `main`: calls `build.yml`, then
+  deploys that very artifact to GitHub Pages. What is published is what was tested; a
+  deployment is never cancelled half way.
+
+**One-time setup** in the repository: *Settings → Pages → Build and deployment → Source:
+GitHub Actions*. Until then the deploy job fails; the build still runs.
+
+The site is a plain p2 repository at the root, not a composite, so each deploy replaces the
+previous build. Pinning older versions would need a composite with one child per release —
+not worth it until someone asks to stay on an old one.
 
 ## 🕳️ Known gaps
 
