@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.mat.SnapshotException;
+import org.eclipse.mat.query.registry.CommandLine;
 import org.eclipse.mat.snapshot.ISnapshot;
 import org.eclipse.mat.snapshot.model.Field;
 import org.eclipse.mat.snapshot.model.GCRootInfo;
@@ -42,7 +43,7 @@ public final class MatObjectTool extends SnapshotTool {
 
 	@Override
 	public String getDescription() {
-		return "Reads one object of a heap dump that is ALREADY OPEN in the IDE: its class, shallow and retained size, the GC roots that hold it, every field with its value, the objects it points at and, for an array, a slice of its elements. Address in, structure out, so a walk down an object graph is one call per hop instead of a query, a result tab and an expand of a tree whose columns cannot be read. A reference field carries the address, the class and, where the target has one, the text MAT shows for it, which is what makes a String, a char[] or a boxed number readable without a second call. Sizes are bytes; a negative retained size is MAT's way of saying it only has an approximate minimum because the dominator tree was not computed for that object. Arrays come back by slice: 'arrayOffset' and 'arrayLength' say which part, because a million element array is not an answer. It never opens or parses a dump: an unknown one is an error listing what is open.";
+		return "Reads one object of a heap dump that is ALREADY OPEN in the IDE: its class, shallow and retained size, the GC roots that hold it, every field with its value, the objects it points at and, for an array, a slice of its elements. Address in, structure out, so a walk down an object graph is one call per hop instead of a query, a result tab and an expand of a tree whose columns cannot be read. A reference field carries the address, the class and, where the target has one, the text MAT shows for it, which is what makes a String, a char[] or a boxed number readable without a second call. Sizes are bytes; a negative retained size is MAT's way of saying it only has an approximate minimum because the dominator tree was not computed for that object. Arrays come back by slice: 'arrayOffset' and 'arrayLength' say which part, because a million element array is not an answer. 'show' opens the object in the heap editor as MAT's own expandable tree as well, for the person sitting at the IDE to continue from; it is off by default so that a walk down a graph does not leave a pane behind at every hop. It never opens or parses a dump: an unknown one is an error listing what is open.";
 	}
 
 	@Override
@@ -61,7 +62,8 @@ public final class MatObjectTool extends SnapshotTool {
 				    "inbound":       {"type":"boolean","default":false,"description":"Include the objects that point at this one. Costs an index read over the whole dump."},
 				    "inboundLimit":  {"type":"integer","default":50,"minimum":1,"maximum":10000},
 				    "arrayOffset":   {"type":"integer","default":0,"minimum":0,"description":"First array element to return."},
-				    "arrayLength":   {"type":"integer","default":64,"minimum":0,"maximum":65536,"description":"Array elements to return. 0 reports the length and no data."}
+				    "arrayLength":   {"type":"integer","default":64,"minimum":0,"maximum":65536,"description":"Array elements to return. 0 reports the length and no data."},
+				    "show":          {"type":"boolean","default":false,"description":"Also open this object in the heap editor as MAT's expandable object tree, for the person at the IDE to carry on from. Off by default because a walk down a graph would otherwise leave a pane per hop; turn it on for the object that matters."}
 				  },
 				  "additionalProperties": false
 				}""".formatted(DUMP_PROPERTY);
@@ -83,6 +85,13 @@ public final class MatObjectTool extends SnapshotTool {
 		}
 		if (args.getBoolean("inbound", false)) {
 			result.put("inbound", inbound(object, snapshot, args.getInt("inboundLimit", DEFAULT_REFERENCE_LIMIT, 1, 10000)));
+		}
+		if (args.getBoolean("show", false)) {
+			// a second, one-object execution rather than a rendering of what is above:
+			// what the person at the IDE wants to carry on from is MAT's own expandable
+			// object tree, and list_objects is the query that produces it
+			show(dump, CommandLine.parse(dump.context(), "list_objects " + Addresses.format(object.getObjectAddress()))
+					.execute(new MonitorListener(monitor)), result);
 		}
 		return result;
 	}

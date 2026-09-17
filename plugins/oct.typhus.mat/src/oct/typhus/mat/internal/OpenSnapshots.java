@@ -29,8 +29,15 @@ final class OpenSnapshots {
 	/** How long the workbench may take to answer before the tool gives up on it. */
 	private static final int UI_TIMEOUT_SECONDS = 10;
 
-	/** An open heap dump: the file the IDE knows it by, and the snapshot to query. */
-	record Dump(String path, ISnapshot snapshot) {
+	/**
+	 * An open heap dump: the file the IDE knows it by, the snapshot to query, and the
+	 * editor showing it.
+	 * <p>
+	 * The editor is here so that a result can be put in front of the person at the IDE as
+	 * an ordinary Memory Analyzer pane. It is a workbench part: touch it only on the UI
+	 * thread, through {@link UiDispatch}.
+	 */
+	record Dump(String path, ISnapshot snapshot, MultiPaneEditor editor, IQueryContext context) {
 	}
 
 	private OpenSnapshots() {
@@ -110,7 +117,7 @@ final class OpenSnapshots {
 					IQueryContext context = pane.getQueryContext();
 					if (context != null && context.get(ISnapshot.class, null) instanceof ISnapshot snapshot) {
 						String path = snapshot.getSnapshotInfo().getPath();
-						byPath.putIfAbsent(path, new Dump(path, snapshot));
+						byPath.putIfAbsent(path, new Dump(path, snapshot, pane, context));
 					}
 				}
 			}

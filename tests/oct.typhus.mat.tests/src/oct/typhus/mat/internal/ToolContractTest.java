@@ -60,6 +60,20 @@ class ToolContractTest {
 		}
 	}
 
+	/**
+	 * The two reading tools can put their result in front of the person at the IDE.
+	 * <p>
+	 * A query shows by default and an object read does not: the query is the step somebody
+	 * carries on from, while a graph walk would leave a pane behind at every hop.
+	 */
+	@Test
+	void theReadingToolsCanShowTheirResult() {
+		Map<?, ?> query = (Map<?, ?>) ((Map<?, ?>) schemaOf(new MatQueryTool()).get("properties")).get("show");
+		Map<?, ?> object = (Map<?, ?>) ((Map<?, ?>) schemaOf(new MatObjectTool()).get("properties")).get("show");
+		assertEquals(Boolean.TRUE, query.get("default"));
+		assertEquals(Boolean.FALSE, object.get("default"));
+	}
+
 	/** The description is the only place the model learns what a tool costs and refuses to do. */
 	@Test
 	void everyToolExplainsItself() {
