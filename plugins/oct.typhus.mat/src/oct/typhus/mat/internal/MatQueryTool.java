@@ -78,6 +78,12 @@ public final class MatQueryTool extends SnapshotTool {
 		JsonObject rendered = ResultJson
 				.render(answer == null ? null : answer.getSubject(), id -> Addresses.of(dump.snapshot(), id), limits)
 				.put("query", query);
+		String sql = Sql.statementOf(query);
+		if (sql != null) {
+			// the statement as it reads, so that what is discussed here and what stands in
+			// the pane are the same thing rather than one line against nine
+			rendered.put("sql", Sql.format(sql));
+		}
 		if (args.getBoolean("show", true)) {
 			ResultPanes.show(dump, answer, paneTitle(query, args.getString("title")), rendered);
 		}

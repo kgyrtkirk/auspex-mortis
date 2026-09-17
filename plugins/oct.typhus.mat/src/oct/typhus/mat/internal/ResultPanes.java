@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.mat.query.IResult;
 import org.eclipse.mat.query.IStructuredResult;
-import org.eclipse.mat.query.registry.CommandLine;
 import org.eclipse.mat.query.registry.QueryResult;
 import org.eclipse.mat.ui.MemoryAnalyserPlugin;
 import org.eclipse.mat.ui.QueryExecution;
@@ -59,7 +58,7 @@ final class ResultPanes {
 
 	/** Which pane was opened, on the UI thread. */
 	private static String display(Dump dump, QueryResult result, String title) {
-		String sql = calciteSql(result.getCommand());
+		String sql = Sql.statementOf(result.getCommand());
 		if (sql != null && calcitePane(dump, result, title, sql)) {
 			return "calcite";
 		}
@@ -103,8 +102,9 @@ final class ResultPanes {
 			Method initQueryResult = pane.getClass().getMethod("initQueryResult", QueryResult.class, PaneState.class);
 			pane.setPaneState(new PaneState(PaneType.COMPOSITE_PARENT, null, pane.getTitle(), false));
 			dump.editor().addNewPage(pane, null, title, pane.getTitleImage());
-			// after the page is added, because the widget does not exist before it
-			((StyledText) queryString.invoke(pane)).setText(sql);
+			// after the page is added, because the widget does not exist before it, and
+			// laid out at its clauses: this is a statement somebody is about to edit
+			((StyledText) queryString.invoke(pane)).setText(Sql.format(sql));
 			initQueryResult.invoke(pane, result, null);
 			return true;
 		} catch (Exception e) {
@@ -113,12 +113,4 @@ final class ResultPanes {
 		}
 	}
 
-	/** The statement of a {@code calcite "…"} command line, or {@code null} for anything else. */
-	private static String calciteSql(String command) {
-		if (command == null) {
-			return null;
-		}
-		String[] tokens = CommandLine.tokenize(command);
-		return tokens.length == 2 && "calcite".equalsIgnoreCase(tokens[0]) ? tokens[1] : null;
-	}
 }
