@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Typhus MAT Tools Tests
 Bundle-SymbolicName: oct.typhus.mat.tests
-Bundle-Version: 0.1.0.qualifier
+Bundle-Version: 0.2.0.qualifier
 Bundle-Vendor: Octavian
 Bundle-RequiredExecutionEnvironment: JavaSE-25
 Fragment-Host: oct.typhus.mat

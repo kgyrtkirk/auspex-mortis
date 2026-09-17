@@ -63,7 +63,7 @@ public final class MatObjectTool extends SnapshotTool {
 				    "inboundLimit":  {"type":"integer","default":50,"minimum":1,"maximum":10000},
 				    "arrayOffset":   {"type":"integer","default":0,"minimum":0,"description":"First array element to return."},
 				    "arrayLength":   {"type":"integer","default":64,"minimum":0,"maximum":65536,"description":"Array elements to return. 0 reports the length and no data."},
-				    "show":          {"type":"boolean","default":false,"description":"Also open this object in the heap editor as MAT's expandable object tree, for the person at the IDE to carry on from. Off by default because a walk down a graph would otherwise leave a pane per hop; turn it on for the object that matters."}
+				    "show":          {"type":"boolean","default":true,"description":"Also open this object in the heap editor as MAT's expandable object tree, for the person at the IDE to carry on from. Pass false for a hop in a long walk, whose pane would only be noise."}
 				  },
 				  "additionalProperties": false
 				}""".formatted(DUMP_PROPERTY);
@@ -86,7 +86,7 @@ public final class MatObjectTool extends SnapshotTool {
 		if (args.getBoolean("inbound", false)) {
 			result.put("inbound", inbound(object, snapshot, args.getInt("inboundLimit", DEFAULT_REFERENCE_LIMIT, 1, 10000)));
 		}
-		if (args.getBoolean("show", false)) {
+		if (args.getBoolean("show", true)) {
 			// a second, one-object execution rather than a rendering of what is above:
 			// what the person at the IDE wants to carry on from is MAT's own expandable
 			// object tree, and list_objects is the query that produces it

@@ -61,17 +61,25 @@ class ToolContractTest {
 	}
 
 	/**
-	 * The two reading tools can put their result in front of the person at the IDE.
+	 * Both reading tools put their result in front of the person at the IDE by default.
 	 * <p>
-	 * A query shows by default and an object read does not: the query is the step somebody
-	 * carries on from, while a graph walk would leave a pane behind at every hop.
+	 * The point of running through the API was never to keep the answer to ourselves: an
+	 * agent that leaves no pane behind leaves nobody anything to carry on from.
 	 */
 	@Test
-	void theReadingToolsCanShowTheirResult() {
+	void theReadingToolsShowTheirResultByDefault() {
 		Map<?, ?> query = (Map<?, ?>) ((Map<?, ?>) schemaOf(new MatQueryTool()).get("properties")).get("show");
 		Map<?, ?> object = (Map<?, ?>) ((Map<?, ?>) schemaOf(new MatObjectTool()).get("properties")).get("show");
 		assertEquals(Boolean.TRUE, query.get("default"));
-		assertEquals(Boolean.FALSE, object.get("default"));
+		assertEquals(Boolean.TRUE, object.get("default"));
+	}
+
+	/** Ordering is the first thing anybody asks of a histogram. */
+	@Test
+	void aQueryCanBeOrdered() {
+		Map<?, ?> properties = (Map<?, ?>) schemaOf(new MatQueryTool()).get("properties");
+		assertTrue(properties.containsKey("sortBy"));
+		assertTrue(properties.containsKey("desc"));
 	}
 
 	/** The description is the only place the model learns what a tool costs and refuses to do. */
