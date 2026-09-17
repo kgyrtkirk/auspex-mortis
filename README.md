@@ -1,4 +1,4 @@
-# 🜏 Typhus — MAT tools for the Eclipse MCP server
+# 🜏 Auspex Mortis — MAT tools for the Eclipse MCP server
 
 Three MCP tools that answer questions about a heap dump **already open** in Memory Analyzer
 through MAT's API instead of its user interface. They contribute to the
@@ -76,7 +76,7 @@ and the MCP server's own update site. Needs network on a cold cache, nothing els
 mvn clean verify
 ```
 
-Produces `update-site/oct.typhus.repository/target/repository`, a p2 repository, and runs
+Produces `update-site/hu.rxd.auspex.mortis.repository/target/repository`, a p2 repository, and runs
 the tests on the way.
 
 **MAT's version must match the IDE's.** The snapshot is handed over in process; a bundle
@@ -85,8 +85,8 @@ compiled against a different MAT resolves and then fails on a class the two cann
 ## 📥 Install
 
 ```
-eclipse_add_repository  url: file:/…/typhus/update-site/oct.typhus.repository/target/repository, dryRun: false
-eclipse_install         unit: oct.typhus.feature.feature.group, wait: true
+eclipse_add_repository  url: file:/…/auspex-mortis/update-site/hu.rxd.auspex.mortis.repository/target/repository, dryRun: false
+eclipse_install         unit: hu.rxd.auspex.mortis.feature.feature.group, wait: true
 eclipse_restart
 ```
 
@@ -114,7 +114,7 @@ its other classes and most of the heap.
 
 ## 🧪 Tests
 
-`tests/oct.typhus.mat.tests` is a **fragment** of the plug-in, so it sees the internal
+`tests/hu.rxd.auspex.mortis.tests` is a **fragment** of the plug-in, so it sees the internal
 classes without any of them being exported. `tycho-surefire` runs it in a real headless
 Equinox — `useUIHarness=false`, no display needed — with `failIfNoTests`, because a build
 that discovers nothing and reports success is the failure that matters.

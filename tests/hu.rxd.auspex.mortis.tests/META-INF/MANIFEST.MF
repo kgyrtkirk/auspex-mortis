@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Auspex Mortis Tests
+Bundle-SymbolicName: hu.rxd.auspex.mortis.tests
+Bundle-Version: 0.4.0.qualifier
+Bundle-Vendor: Octavian
+Bundle-RequiredExecutionEnvironment: JavaSE-25
+Fragment-Host: hu.rxd.auspex.mortis
+Automatic-Module-Name: hu.rxd.auspex.mortis.tests
+Import-Package: org.junit.jupiter.api,
+ org.junit.jupiter.api.function

@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>oct.typhus</groupId>
-  <artifactId>oct.typhus.parent</artifactId>
+  <groupId>hu.rxd.auspex</groupId>
+  <artifactId>hu.rxd.auspex.mortis.parent</artifactId>
   <version>0.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Typhus MAT tools for the Eclipse MCP server</name>
+  <name>Auspex Mortis — heap dump tools for the Eclipse MCP server</name>
 
   <properties>
     <tycho.version>5.0.3</tycho.version>
@@ -53,7 +53,7 @@
         <version>${tycho.version}</version>
         <configuration>
           <target>
-            <file>${maven.multiModuleProjectDirectory}/target-platform/oct.typhus.target/oct.typhus.target.target</file>
+            <file>${maven.multiModuleProjectDirectory}/target-platform/hu.rxd.auspex.mortis.target/hu.rxd.auspex.mortis.target.target</file>
           </target>
           <executionEnvironment>JavaSE-25</executionEnvironment>
           <environments>

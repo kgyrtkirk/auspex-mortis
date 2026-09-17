@@ -45,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: update-site
-          path: update-site/oct.typhus.repository/target/repository
+          path: update-site/hu.rxd.auspex.mortis.repository/target/repository

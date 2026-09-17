@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="hu.rxd.auspex.mortis.feature" version="0.0.0">
+      <category name="hu.rxd.auspex"/>
+   </feature>
+   <category-def name="hu.rxd.auspex" label="Auspex Mortis">
+      <description>
+         Heap dump tools for the Eclipse MCP server.
+      </description>
+   </category-def>
+</site>
