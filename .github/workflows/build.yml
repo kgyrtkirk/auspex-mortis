@@ -3,6 +3,8 @@ name: build
 # the core: builds, tests and packages the update site. Pull requests run it directly;
 # pages.yml calls it before publishing, so what is deployed is exactly what was tested
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_call:
 
