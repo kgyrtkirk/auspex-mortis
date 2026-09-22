@@ -28,7 +28,7 @@
       <feature id="MatCalciteFeature"/>
       <feature id="com.vogella.eclipse.mcp.feature"/>
       <feature id="org.eclipse.jgit"/>
-      <feature id="hu.rxd.auspex.mortis.feature"/>
+      <feature id="hu.rxd.auspex.mortis.product.feature"/>
       <feature id="org.eclipse.rcp"/>
       <feature id="org.eclipse.equinox.p2.user.ui"/>
       <feature id="org.eclipse.help"/>

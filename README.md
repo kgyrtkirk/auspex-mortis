@@ -1,10 +1,14 @@
 # 🜏 Auspex Mortis — MAT tools for the Eclipse MCP server
 
-Three MCP tools that answer questions about a heap dump **already open** in Memory Analyzer
+Five MCP tools that open a Java heap dump in Memory Analyzer and answer questions about it
 through MAT's API instead of its user interface. They contribute to the
 `com.vogella.eclipse.mcp.core.tools` extension point of the
 [Eclipse MCP server](https://github.com/vogellacompany/eclipse-mcp-server), so they appear
 next to its own `eclipse_*` tools in any MCP client connected to the IDE.
+
+They ship two ways: as a plug-in for an IDE that already has Memory Analyzer, and as a
+**product** — Memory Analyzer with Calcite, the MCP server and these tools already in it,
+which also runs with nobody watching and hands an agent an endpoint against a dump.
 
 Home: <https://github.com/kgyrtkirk/auspex-mortis> · update site:
 `https://kgyrtkirk.github.io/auspex-mortis/`
@@ -88,8 +92,12 @@ Produces two things, and runs the tests on the way:
 
 * `update-site/hu.rxd.auspex.mortis.repository/target/repository` — the p2 repository.
 * `product/hu.rxd.auspex.mortis.product/target/products/…tar.gz` — Memory Analyzer with
-  Calcite, the MCP server and these tools already installed, launcher `auspex`. 156 MB
-  packed, 176 MB unpacked, `linux/gtk/x86_64` only.
+  Calcite, the MCP server and these tools already installed, launcher `auspex` and
+  `auspex-headless.sh` beside it. 160 MB packed, `linux/gtk/x86_64` only.
+
+`hu.rxd.auspex.mortis.product.feature` exists to carry that script as a root file and nothing
+else: the plug-in's own feature stays free of it, so installing the tools into somebody's IDE
+never drops a shell script into their installation.
 
 `.github/scripts/compose-site.sh <repository> <dir>` lays the published site out: a p2
 composite whose children are that repository and the sites named in the target platform, so
@@ -138,12 +146,7 @@ listens on `http://127.0.0.1:8642/mcp`, and the URL and bearer token are written
 read. Port and token are the server's own preferences, under *Preferences → General → MCP
 Server*, should either need changing.
 
-It also answers headless, through MAT's own application, with no display:
-
-```bash
-./auspex -nosplash -consoleLog -data /scratch/ws -application org.eclipse.mat.api.parse dump.hprof
-./auspex -data /scratch/ws --launcher.openFile dump.hprof   # the workbench, and the endpoint with it
-```
+It also answers with no display at all — `./auspex-headless.sh dump.hprof.gz`, below.
 
 **Update site: `https://kgyrtkirk.github.io/auspex-mortis/`** — published from `main` by
 GitHub Actions, so it always carries the last build that passed its tests. It is a composite:
@@ -170,8 +173,9 @@ eclipse_restart
 ```
 
 A local build installs the same way, from
-`file:/…/auspex-mortis/update-site/hu.rxd.auspex.mortis.repository/target/repository`. Bump the
-version first: p2 treats a rebuilt `0.4.0` as the thing it already has.
+`file:/…/auspex-mortis/update-site/hu.rxd.auspex.mortis.repository/target/repository`. Commit
+first: the qualifier comes from the commit, so rebuilding the same commit produces the version
+p2 already has and it will decline to install it again.
 
 **The restart is not optional.** `McpToolRegistry` reads the extension point once and caches
 it for the life of the IDE — nothing calls its `reset()` — so a newly installed tool is
@@ -184,20 +188,27 @@ behind; that is harmless, because the server validates the arguments.
 
 ## 🤖 Headless
 
-`product/hu.rxd.auspex.mortis.product/auspex-headless.sh <product-dir> <dump> [workspace]`
-starts the product with nobody watching and prints the endpoint to talk to it:
+`auspex-headless.sh` sits at the root of the installation, beside the launcher it drives:
 
+```bash
+./auspex-headless.sh dump.hprof.gz [workspace]
+{"state":"listening","url":"http://127.0.0.1:8642/mcp","token":"…","workspace":"/scratch/ws"}
+{"dump":"…","indexes":"reused","state":"open","objects":356711957,"classes":32149,…}
 ```
-{"state":"listening","url":"http://127.0.0.1:8643/mcp","token":"…","workspace":"/scratch/ws"}
-```
+
+It drives the product it sits in, so it is told no paths. `AUSPEX_PRODUCT` points it at
+another installation, which is what a copy living outside one needs.
 
 It starts the product, waits for the endpoint, and then **opens the dump through that
 endpoint** — `mat_open`, not a launch argument, because Memory Analyzer's application reads no
-file from the command line. `--launcher.openFile` belongs to the IDE and does nothing here: it
-comes up listening, with no editor. The open call returns as soon as the dump is open, or says
-`parsing` after `AUSPEX_OPEN_WAIT` and leaves the parse running for the next `mat_open` to
-wait on. The workbench really runs, against `Xvfb`: panes open, `calcite` answers, and the
-tools behave as they do on a desktop.
+file from the command line. `--launcher.openFile` is the IDE's feature and does nothing here:
+the product comes up listening, with no editor, D-Bus present or not. The open call returns as
+soon as the dump is open, or says `parsing` after `AUSPEX_OPEN_WAIT` and leaves the parse
+running for the next `mat_open` to wait on. The workbench really runs, against `Xvfb`: panes
+open, `calcite` answers, and the tools behave as they do on a desktop.
+
+Needs `Xvfb`, `curl` and `jq` on the machine; it says which one is missing rather than
+failing later.
 
 ### 🧮 Heap
 
@@ -210,19 +221,100 @@ AUSPEX_HEAP=40g auspex-headless.sh …            # the script's knob, default 8
 ```
 
 `auspex.ini` ships with `-Xmx1024m`, which is Memory Analyzer's own default and far too small
-for a real dump. Nothing here promises what a given dump needs — but as one measurement, a
-10.4 GB chunked-gz dump of 360 million objects **whose indexes already existed** opened in
-0.5 s and left the JVM holding 2.4 GB, having never re-read the dump. A first parse, which
-does read all of it, is the expensive case and the reason the ceiling is raised at all.
+for a real dump. Nothing here promises what a given dump needs. Two measurements of one dump —
+10.2 GB chunked gzip, ~51.7 GB of heap, 356.7 million objects, on a 24-core machine:
+
+| | wall clock | heap the JVM actually held |
+|---|---|---|
+| first parse, writing ~25 GB of indexes | **9 min 34 s** | 40 GB, the ceiling it was given |
+| every later open, reusing them | **0.5 s** | 2.4 GB |
+
+The parse is what the ceiling is for; reuse never re-reads the dump. A sorted `dominator_tree`
+over 13.3 million roots then answers in 138 ms, and `calcite` counting 43.9 million instances
+of one class in 1.8 s.
 
 The server needs no enabling — the product ships with it on. What the script does set is what
-a run must not share with the IDE its user is sitting in: its own port, and its own bearer
+a run must not share with the IDE its user may be sitting in: its own port, and its own bearer
 token beside the workspace through `-Dcom.vogella.eclipse.mcp.tokenDirectory` rather than the
 one in `~/.eclipse`. The URL and that token are written to
 `<workspace>/.metadata/.plugins/com.vogella.eclipse.mcp.server/endpoint.json`.
 
-**`--launcher.openFile` needs `dbus-launch`.** The launcher hands the path to the instance over
-D-Bus; without it the file is dropped, the script says so, and `mat_open` is the way in.
+## 🧭 Three ways to use the product
+
+* 🖥️ **As Memory Analyzer.** `./auspex`. It is MAT, with its panes and its query browser — and
+  the endpoint is listening beside them, so an agent can join the session you are looking at
+  and its answers arrive as panes you can carry on from.
+* 🤖 **As an endpoint against one dump.** `./auspex-headless.sh dump.hprof.gz /scratch/ws` on a
+  machine with no display. Point a client at what it prints, ask, and stop it when done —
+  `eclipse_exit` over the endpoint, or kill the launcher. The indexes stay beside the dump.
+* 🧱 **As an indexer, with no endpoint at all.** MAT's own headless application parses and
+  exits, which is what a CI step wants when the point is to compute the indexes once:
+
+  ```bash
+  ./auspex -nosplash -consoleLog -data /scratch/ws \
+      -application org.eclipse.mat.api.parse dump.hprof.gz
+  ```
+
+## 🔌 Pointing a client at it
+
+`endpoint.json` in the workspace holds both values a client needs, so nothing is copied out of
+a preferences page:
+
+```json
+{"state":"listening","url":"http://127.0.0.1:8642/mcp","token":"…","workspace":"/scratch/ws"}
+```
+
+The transport is Streamable HTTP with a bearer token:
+
+```json
+{"mcpServers": {"auspex": {
+  "type": "http",
+  "url": "http://127.0.0.1:8642/mcp",
+  "headers": {"Authorization": "Bearer <token from endpoint.json>"}
+}}}
+```
+
+Loopback only and token-guarded in both modes, because **a heap dump is customer data**. A
+client arriving cold should call `auspex_help` first: it answers with the dumps that are open,
+what each holds, whether Calcite is installed, and the order the other tools are usually asked
+in.
+
+## 🗄️ Keeping what the parse computed
+
+A parse of a large dump costs tens of minutes and writes its indexes beside the dump. They are
+ordinary files and they travel, which is worth doing when the same dump is analysed on another
+machine or again next week. What to keep, from a real 51.7 GB heap:
+
+| file | what it is |
+|---|---|
+| `<name>.index` | the master index, 52 MB — the one MAT looks for to decide whether it can reuse |
+| `<name>.idx.index`, `.o2c.index`, `.a2s.index`, `.o2hprof.index` | object identity, class and address maps, ~7 GB |
+| `<name>.inbound.index`, `.outbound.index` | the reference graph, ~9 GB |
+| `<name>.domIn.index`, `.domOut.index`, `.o2ret.index` | the dominator tree and retained sizes, ~7 GB |
+| `<name>.chunkedgzip.index` | the offset map of a chunked-gz dump — without it a compressed dump is read from the start again |
+| `<name>.threads`, `<name>.i2sv2.index` | thread call stacks, and the string cache MAT fills as it goes |
+
+```bash
+tar -czf a3-indexes.tar.gz --exclude='*.log' --exclude='*temp*' a3.*index a3.threads
+```
+
+Four rules decide whether the archive is worth anything on the other side:
+
+* ⚠️ **The `.hprof` goes with them, always.** MAT reopens the dump for every field read; the
+  indexes shorten the parse and never replace it.
+* 🏷️ **The dump keeps its name.** The index prefix is derived from the dump's filename, so a
+  renamed or copied dump is a new dump and pays the parse again — measured: copying one to
+  `a3.hprof.gz` re-parsed all 9 minutes 34 of it.
+* 🕰️ **Modification times survive the trip.** MAT reuses an index only if the dump is no newer
+  than it, so an unpacking that stamps everything with "now" can make the dump look newer than
+  its indexes and trigger a silent re-parse. `tar` preserves them; check that whatever moves
+  them does too.
+* 🔒 **The same MAT version reads them.** Indexes written by another version are out of
+  contract — which is the argument for the product: its MAT is pinned by the build.
+
+Skip `*.temp.*`, the numbered `*.log` chunk files and `lock.index`: they belong to a parse in
+progress. `_Leak_Suspects.zip` and friends are reports, not indexes — keep them if you want
+the report, not to avoid a parse.
 
 ## 📤 What `mat_extract` writes
 
@@ -262,8 +354,9 @@ reason: it is the only thing it needed a snapshot for.
 GitHub Actions, two workflows:
 
 * [`build.yml`](.github/workflows/build.yml) — the core: JDK 25, `mvn -B clean verify`, the
-  Maven cache carrying Tycho's p2 cache, surefire output kept when a run fails, the update
-  site packaged as an artifact. Pull requests run it directly.
+  Maven cache carrying Tycho's p2 cache, surefire output kept when a run fails, the composed
+  update site packaged for Pages and the product archive kept as an artifact, so its size is
+  visible on every run. Pull requests run it directly.
 * [`pages.yml`](.github/workflows/pages.yml) — on every push to `main`: calls `build.yml`, then
   deploys that very artifact to GitHub Pages. What is published is what was tested; a
   deployment is never cancelled half way.
@@ -271,9 +364,10 @@ GitHub Actions, two workflows:
 **One-time setup** in the repository: *Settings → Pages → Build and deployment → Source:
 GitHub Actions*. Until then the deploy job fails; the build still runs.
 
-The site is a plain p2 repository at the root, not a composite, so each deploy replaces the
-previous build. Pinning older versions would need a composite with one child per release —
-not worth it until someone asks to stay on an old one.
+The site is a composite: `compositeContent.xml` at the root, this build's own repository under
+`auspex/`, and the MAT, MCP server and Calcite sites as the other children. Each deploy
+replaces the previous build — pinning older versions would need one child per release, which
+is not worth it until somebody asks to stay on an old one.
 
 ## 🕳️ Known gaps
 
@@ -282,8 +376,9 @@ not worth it until someone asks to stay on an old one.
 * **Nothing verifies the panes automatically.** Whether a pane opened, and what it shows, is
   checked by a person looking at the IDE; the tests cover the rows and the contracts.
 * **Nothing that needs a snapshot is tested** — `GraphExtract`'s walk and writer, and both
-  object and query tools end to end. That needs a small dump committed as a fixture, or a
-  fake `ISnapshot`, and neither is free.
+  object and query tools end to end. The whole chain has been exercised by hand against a
+  51.7 GB dump, parse and reuse alike, but no test does it: that wants the build to make its
+  own dump, which a JVM can do to itself in a second, and nobody has written it yet.
 * **Tier 2 and 3 are not here**: reading and writing widget text, invoking JFace actions,
   cancelling jobs, bundle reload, opening a file outside the workspace. Those touch the UI
   and belong in a separate bundle, so that a MAT upgrade cannot break them.

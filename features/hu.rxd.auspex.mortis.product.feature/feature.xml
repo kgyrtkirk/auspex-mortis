@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="hu.rxd.auspex.mortis.product.feature"
+      label="Auspex Mortis Product"
+      version="0.5.0.qualifier"
+      provider-name="Octavian">
+
+   <description>
+      What the product adds beyond the plug-in: the script that runs it with nobody
+      watching. Separate from the plug-in's own feature so that installing the tools into
+      somebody's IDE never drops a shell script into their installation.
+   </description>
+
+   <license url="https://www.eclipse.org/legal/epl-2.0/">
+      Eclipse Public License 2.0
+   </license>
+
+   <includes id="hu.rxd.auspex.mortis.feature" version="0.0.0"/>
+
+</feature>

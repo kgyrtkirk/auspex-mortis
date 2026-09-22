@@ -1,31 +1,38 @@
 #!/bin/bash
-# Starts the product with nobody watching, hands it a dump, and prints the MCP endpoint.
+# Runs this installation with nobody watching: opens a dump and prints the MCP endpoint.
+#
+#   ./auspex-headless.sh <dump> [workspace]
+#
+# It drives the product it sits in, so it needs no path to be told. Somewhere else, or driving
+# another installation, set AUSPEX_PRODUCT to the directory holding the auspex launcher.
 #
 # The workbench really runs - MAT's editors, its parse job and its panes are what the tools
 # work through - so it runs against a virtual display. The dump is opened through the endpoint
 # rather than on the command line, because Memory Analyzer's application reads no file
 # argument: --launcher.openFile is an IDE feature and this product is not the IDE.
 #
-# The server itself needs no enabling; the product listens out of the box. What is set here is
-# what a run must not share with the IDE its user is sitting in: its own port, and its own
-# bearer token beside the workspace rather than the one in ~/.eclipse.
+# The server needs no enabling; the product listens out of the box. What is set here is what a
+# run must not share with the IDE its user may be sitting in: its own port, and its own bearer
+# token beside the workspace rather than the one in ~/.eclipse.
 #
-#   auspex-headless.sh <product-dir> <dump> [workspace]
-#
-# Env: AUSPEX_PORT (8642), AUSPEX_HEAP (8g), AUSPEX_DISPLAY (:99), AUSPEX_WAIT (900),
+# Env: AUSPEX_PRODUCT (this script's directory), AUSPEX_PORT (8642), AUSPEX_HEAP (8g),
+#      AUSPEX_DISPLAY (:99), AUSPEX_WAIT (900),
 #      AUSPEX_OPEN_WAIT (60, how long the open call waits before leaving the parse running)
 set -euo pipefail
 
-product=${1:?the unpacked product directory}
-dump=${2:?the heap dump to open}
-workspace=${3:-$(mktemp -d /tmp/auspex-XXXXXX)}
+product=${AUSPEX_PRODUCT:-$(cd "$(dirname "$0")" && pwd)}
+dump=${1:?the heap dump to open}
+workspace=${2:-$(mktemp -d /tmp/auspex-XXXXXX)}
 port=${AUSPEX_PORT:-8642}
 heap=${AUSPEX_HEAP:-8g}
 display=${AUSPEX_DISPLAY:-:99}
 wait_seconds=${AUSPEX_WAIT:-900}
 open_wait=${AUSPEX_OPEN_WAIT:-60}
 
-[ -x "$product/auspex" ] || { echo "no auspex launcher in $product" >&2; exit 1; }
+[ -x "$product/auspex" ] || {
+	echo "no auspex launcher in $product - set AUSPEX_PRODUCT to the installation to drive" >&2
+	exit 1
+}
 [ -r "$dump" ] || { echo "cannot read the dump $dump" >&2; exit 1; }
 for tool in Xvfb curl jq; do
 	command -v "$tool" >/dev/null || { echo "$tool is not installed" >&2; exit 1; }
