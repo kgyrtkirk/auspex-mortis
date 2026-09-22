@@ -24,12 +24,16 @@ untouched. The result pane still opens — on purpose, see below.
 
 | tool | answers |
 |---|---|
+| `auspex_help` | what these tools are, which dumps are open right now, in what order to ask, and what costs an hour |
+| `mat_open` | opens a dump and parses it when its indexes are not there yet, so the rest have something to work on |
 | `mat_query` | any MAT command line — `histogram`, `dominator_tree`, `list_objects 0x…`, `oql "…"`, `calcite "…"` — as rows with every column, addresses included |
 | `mat_object` | one object: class, sizes, GC roots, fields with resolved reference targets, outbound and inbound references, array slices |
 | `mat_extract` | the object graph below one object, written to a flat binary plus a report, so experiments can continue in a plain JVM |
 
-All three are read-only against the snapshot. `mat_extract` writes a file and therefore
-**defaults to a dry run**.
+The three reading tools are read-only against the snapshot. `mat_extract` writes a file and
+therefore **defaults to a dry run**; `mat_open` is the one that starts a parse, which costs
+tens of minutes and writes indexes beside the dump, and it says which of the two — parse or
+reuse — it did.
 
 ## 🪟 Panes — the point of running in the IDE
 
@@ -59,8 +63,11 @@ opens.
 
 ### 🧭 Rules they all follow
 
-* **Never open or parse a dump.** An unknown dump is an error that lists what is open.
-  Parsing is a multi-minute, multi-gigabyte operation the IDE has already paid for.
+* **Only `mat_open` parses.** For the reading tools an unknown dump is an error that lists
+  what is open: parsing is a multi-minute, multi-gigabyte operation, and paying it by accident
+  for a mistyped path is the one failure that must not happen quietly. Asked for it by name,
+  `mat_open` pays it deliberately and reports whether it parsed or reused the indexes, by
+  MAT's own rule that the index is there and no older than the dump.
 * **The dump is found through the editors**, by way of `MultiPaneEditor#getQueryContext()` —
   `org.eclipse.mat.ui.snapshot.editor` is not an exported package, the editor package is.
   With one dump open, `dump` can be left out.
@@ -140,7 +147,10 @@ that discovers nothing and reports success is the failure that matters.
 What is covered is what can be covered without a parsed dump: address parsing, the JSON
 contract of query results (columns, the `@address` column, `Bytes` as numbers, offset and
 limit, tree expansion and its `more` flag) against hand-built `IResultTable`/`IResultTree`
-implementations, and the schema and naming contract every tool owes the server.
+implementations, the schema and naming contract every tool owes the server, and what
+`mat_open` can tell about a dump before MAT touches it — where MAT will put the index, when it
+counts as reusable, and whether a gzipped dump carries the `HPROF BLOCKSIZE=` comment that
+lets MAT read it compressed.
 
 `ResultJson` takes an id-to-address function rather than the snapshot for exactly this
 reason: it is the only thing it needed a snapshot for.

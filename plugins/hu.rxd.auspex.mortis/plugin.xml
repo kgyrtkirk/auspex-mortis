@@ -3,6 +3,8 @@
 <plugin>
 
    <extension point="com.vogella.eclipse.mcp.core.tools">
+      <tool class="hu.rxd.auspex.mortis.internal.AuspexHelpTool"/>
+      <tool class="hu.rxd.auspex.mortis.internal.MatOpenTool"/>
       <tool class="hu.rxd.auspex.mortis.internal.MatQueryTool"/>
       <tool class="hu.rxd.auspex.mortis.internal.MatObjectTool"/>
       <tool class="hu.rxd.auspex.mortis.internal.MatExtractTool"/>

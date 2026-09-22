@@ -79,6 +79,16 @@ final class OpenSnapshots {
 		throw new BadRequestException("'%s' matches %d open heap dumps: %s".formatted(wanted, matches.size(), paths(matches)));
 	}
 
+	/** The open dump at exactly this path, or {@code null} while none is. */
+	static Dump at(String path) throws McpToolException {
+		for (Dump dump : all()) {
+			if (dump.path().equals(path)) {
+				return dump;
+			}
+		}
+		return null;
+	}
+
 	/** Every dump that is open and finished parsing, in the order the editors were opened. */
 	static List<Dump> all() throws McpToolException {
 		try {
