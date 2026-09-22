@@ -97,6 +97,32 @@ one address installs everything. It reads those children out of the target platf
 than repeating them, and marks the composite non-atomic, so a child that is down costs its
 own content and not the whole site.
 
+### 🔢 Versions
+
+Every build already gets its own version: Tycho appends a qualifier, which is why a jar reads
+`0.5.0.202609221904`. Out of the box that qualifier is the build clock, so the same source
+builds a different version every time and none of them says where it came from.
+
+`tycho-buildtimestamp-jgit`, configured in the parent pom, makes it **the timestamp of the
+commit that last touched the module** instead. It is in the build and not in CI on purpose: a
+laptop and a pipeline building the same commit then produce the same version, and nothing
+rots in a workflow file nobody runs locally. A dirty working tree cannot be traced to any
+commit, so the build warns and falls back to the clock for that build alone:
+
+```
+[WARNING] Working tree is dirty.
+[WARNING] Fallback to default timestamp provider
+```
+
+The base version — `0.5.0` — is the release, and moving it is one command that rewrites the
+poms, the manifests, the feature and the product together:
+
+```bash
+mvn tycho-versions:set-version -DnewVersion=0.6.0-SNAPSHOT
+```
+
+Tag the commit that carries it, and the tag and the artefacts agree by construction.
+
 **MAT's version must match the IDE's.** The snapshot is handed over in process; a bundle
 compiled against a different MAT resolves and then fails on a class the two cannot share.
 

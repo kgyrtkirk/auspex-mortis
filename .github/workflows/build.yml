@@ -34,6 +34,7 @@ jobs:
           cache: maven
 
       - name: Build and test
+        # the version comes out of the build itself, from the commit: nothing to set here
         run: mvn -B clean verify
 
       - name: Keep the test output of a failed run

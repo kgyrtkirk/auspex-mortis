@@ -2,7 +2,7 @@
 <?pde version="3.5"?>
 
 <product name="Auspex Mortis" uid="hu.rxd.auspex.mortis.product" id="hu.rxd.auspex.mortis.product"
-         application="org.eclipse.mat.ui.rcp.application" version="0.4.0.qualifier"
+         application="org.eclipse.mat.ui.rcp.application" version="0.5.0.qualifier"
          useFeatures="true" includeLaunchers="true" autoIncludeRequirements="true">
 
    <configIni use="default">

@@ -6,7 +6,7 @@
 
   <groupId>hu.rxd.auspex</groupId>
   <artifactId>hu.rxd.auspex.mortis.parent</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Auspex Mortis — heap dump tools for the Eclipse MCP server</name>
@@ -31,6 +31,34 @@
         <artifactId>tycho-maven-plugin</artifactId>
         <version>${tycho.version}</version>
         <extensions>true</extensions>
+      </plugin>
+      <!-- no executions: it is invoked by hand to move the version between releases, and
+           declaring it here is what pins the version that invocation gets -->
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-versions-plugin</artifactId>
+        <version>${tycho.version}</version>
+      </plugin>
+      <!-- the qualifier comes from the commit that last touched the module, not from the
+           clock: the same source builds the same version, whoever builds it and whenever, so
+           a jar found on a machine can be traced back to what produced it -->
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-packaging-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>tycho-buildtimestamp-jgit</artifactId>
+            <version>${tycho.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <timestampProvider>jgit</timestampProvider>
+          <!-- a working copy nobody committed still has to build; it says so in the log
+               rather than refusing, and that build's qualifier is the clock -->
+          <jgit.dirtyWorkingTree>warning</jgit.dirtyWorkingTree>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
