@@ -2,6 +2,22 @@
 <?eclipse version="3.4"?>
 <plugin>
 
+   <!-- Memory Analyzer's application under this product's own branding, so that the
+        preference defaults below it are this product's and not an edit of MAT's. -->
+   <extension id="product" point="org.eclipse.core.runtime.products">
+      <product name="Auspex Mortis" application="org.eclipse.mat.ui.rcp.application">
+         <property name="appName" value="Auspex Mortis"/>
+         <property name="aboutText" value="Memory Analyzer with an MCP endpoint against the dump it has open."/>
+         <property name="preferenceCustomization" value="plugin_customization.ini"/>
+      </product>
+   </extension>
+
+   <!-- Memory Analyzer binds its welcome page to its own product id, so this product has to
+        claim it again or the Help menu loses the action and says so in the log. -->
+   <extension point="org.eclipse.ui.intro">
+      <introProductBinding introId="org.eclipse.mat.ui.rcp.Intro" productId="hu.rxd.auspex.mortis.product"/>
+   </extension>
+
    <extension point="com.vogella.eclipse.mcp.core.tools">
       <tool class="hu.rxd.auspex.mortis.internal.AuspexHelpTool"/>
       <tool class="hu.rxd.auspex.mortis.internal.MatOpenTool"/>

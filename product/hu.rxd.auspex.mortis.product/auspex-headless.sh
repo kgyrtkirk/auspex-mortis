@@ -1,35 +1,41 @@
 #!/bin/bash
-# Starts the product with nobody watching and prints the MCP endpoint to talk to it.
+# Starts the product with nobody watching, hands it a dump, and prints the MCP endpoint.
 #
 # The workbench really runs - MAT's editors, its parse job and its panes are what the tools
-# work through - so it runs against a virtual display. Everything else here is what a
-# preferences page would otherwise be needed for: the server is enabled in this workspace
-# only, and the bearer token is kept beside it rather than in ~/.eclipse, so a run cannot
-# disturb the IDE its user is sitting in.
+# work through - so it runs against a virtual display. The dump is opened through the endpoint
+# rather than on the command line, because Memory Analyzer's application reads no file
+# argument: --launcher.openFile is an IDE feature and this product is not the IDE.
+#
+# The server itself needs no enabling; the product listens out of the box. What is set here is
+# what a run must not share with the IDE its user is sitting in: its own port, and its own
+# bearer token beside the workspace rather than the one in ~/.eclipse.
 #
 #   auspex-headless.sh <product-dir> <dump> [workspace]
 #
-# Env: AUSPEX_PORT (8642), AUSPEX_HEAP (4g), AUSPEX_DISPLAY (:99), AUSPEX_WAIT (900)
+# Env: AUSPEX_PORT (8642), AUSPEX_HEAP (8g), AUSPEX_DISPLAY (:99), AUSPEX_WAIT (900),
+#      AUSPEX_OPEN_WAIT (60, how long the open call waits before leaving the parse running)
 set -euo pipefail
 
 product=${1:?the unpacked product directory}
 dump=${2:?the heap dump to open}
 workspace=${3:-$(mktemp -d /tmp/auspex-XXXXXX)}
 port=${AUSPEX_PORT:-8642}
-heap=${AUSPEX_HEAP:-4g}
+heap=${AUSPEX_HEAP:-8g}
 display=${AUSPEX_DISPLAY:-:99}
 wait_seconds=${AUSPEX_WAIT:-900}
+open_wait=${AUSPEX_OPEN_WAIT:-60}
 
 [ -x "$product/auspex" ] || { echo "no auspex launcher in $product" >&2; exit 1; }
 [ -r "$dump" ] || { echo "cannot read the dump $dump" >&2; exit 1; }
-command -v Xvfb >/dev/null || { echo "Xvfb is not installed; the workbench needs a display" >&2; exit 1; }
+for tool in Xvfb curl jq; do
+	command -v "$tool" >/dev/null || { echo "$tool is not installed" >&2; exit 1; }
+done
 
 endpoint="$workspace/.metadata/.plugins/com.vogella.eclipse.mcp.server/endpoint.json"
 settings="$workspace/.metadata/.plugins/org.eclipse.core.runtime/.settings"
 mkdir -p "$settings"
 cat >"$settings/com.vogella.eclipse.mcp.server.prefs" <<EOF
 eclipse.preferences.version=1
-enabled=true
 port=$port
 EOF
 
@@ -38,22 +44,11 @@ if ! xdpyinfo -display "$display" >/dev/null 2>&1; then
 	echo "started Xvfb on $display (pid $!)"
 fi
 
-# --launcher.openFile hands the path to the running instance over D-Bus, so without
-# dbus-launch on the machine it is silently dropped. mat_open reaches the same state through
-# the endpoint, so the run is not lost - but which of the two happened has to be said.
-open=(--launcher.openFile "$dump")
-if ! command -v dbus-launch >/dev/null; then
-	open=()
-	echo "no dbus-launch: the dump is not opened at startup, call mat_open with $dump" >&2
-fi
-
-DISPLAY=$display "$product/auspex" -data "$workspace" -nosplash -consoleLog "${open[@]}" \
+DISPLAY=$display "$product/auspex" -data "$workspace" -nosplash -consoleLog \
 	-vmargs -Xmx"$heap" "-Dcom.vogella.eclipse.mcp.tokenDirectory=$workspace/.mcp" &
 launcher=$!
-echo "started $product/auspex (pid $launcher), workspace $workspace"
+echo "started $product/auspex (pid $launcher), workspace $workspace, heap $heap"
 
-# the endpoint appears when the server is listening, which is long before the parse ends:
-# an agent connects first and watches the dump arrive through mat_open
 deadline=$((SECONDS + wait_seconds))
 until [ -r "$endpoint" ] || [ $SECONDS -ge $deadline ] || ! kill -0 $launcher 2>/dev/null; do
 	sleep 1
@@ -63,3 +58,20 @@ if [ ! -r "$endpoint" ]; then
 	exit 1
 fi
 cat "$endpoint"
+
+url=$(jq -r .url "$endpoint")
+header=(-H "Authorization: Bearer $(jq -r .token "$endpoint")" -H "Content-Type: application/json"
+	-H "Accept: application/json, text/event-stream")
+session=$(curl -sS -D - -o /dev/null "${header[@]}" "$url" \
+	-d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"auspex-headless","version":"1"}}}' \
+	| grep -i '^mcp-session-id:' | tr -d '\r' | cut -d' ' -f2)
+[ -n "$session" ] || { echo "the server did not open a session" >&2; exit 1; }
+header+=(-H "Mcp-Session-Id: $session")
+curl -sS "${header[@]}" -o /dev/null -d '{"jsonrpc":"2.0","method":"notifications/initialized"}' "$url"
+
+# a parse of a large dump outlives this call on purpose: it answers 'parsing', the work
+# carries on in the product, and the agent asks mat_open again
+answer=$(curl -sS "${header[@]}" "$url" -d "$(printf '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"mat_open","arguments":{"path":"%s","waitSeconds":%s}}}' "$dump" "$open_wait")")
+curl -sS -X DELETE "${header[@]}" -o /dev/null "$url" || true
+frame=$(printf '%s' "$answer" | sed -n 's/^data: //p')
+printf '%s' "${frame:-$answer}" | jq -r '.result.content[0].text'

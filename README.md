@@ -105,7 +105,13 @@ compiled against a different MAT resolves and then fails on a class the two cann
 Two ways, and neither needs anything installed first.
 
 **The product** — unpack the archive and run `./auspex`. It is Memory Analyzer, with Calcite,
-the MCP server and these tools already in it, at the versions this build was tested against.
+the MCP server and these tools already in it, at the versions this build was tested against,
+and **the endpoint is on out of the box**: nothing to enable, no preference page to visit. It
+listens on `http://127.0.0.1:8642/mcp`, and the URL and bearer token are written to
+`<workspace>/.metadata/.plugins/com.vogella.eclipse.mcp.server/endpoint.json` for a client to
+read. Port and token are the server's own preferences, under *Preferences → General → MCP
+Server*, should either need changing.
+
 It also answers headless, through MAT's own application, with no display:
 
 ```bash
@@ -121,6 +127,11 @@ adding that one address also gives the IDE
 [Calcite plug-in](https://vlsi.github.io/mat-calcite-plugin-update-site/stable/), so a missing
 prerequisite is no longer a second trip. Calcite stays optional; with it, `calcite "…"`
 queries open in its SQL editor pane.
+
+Installed this way the MCP server keeps **its own default, which is off**: a plug-in that
+starts listening on a socket in an IDE somebody else set up is a surprise, so turn it on under
+*Preferences → General → MCP Server*. Only the product, whose whole purpose is the endpoint,
+defaults it on.
 
 By hand: *Help → Install New Software… → Add…* → the URL above → **Auspex Mortis**. Restart.
 
@@ -154,15 +165,34 @@ starts the product with nobody watching and prints the endpoint to talk to it:
 {"state":"listening","url":"http://127.0.0.1:8643/mcp","token":"…","workspace":"/scratch/ws"}
 ```
 
-`AUSPEX_PORT`, `AUSPEX_HEAP`, `AUSPEX_DISPLAY` and `AUSPEX_WAIT` are its knobs. The workbench
-really runs, against `Xvfb`: panes open, `calcite` answers, and the tools behave as they do on
-a desktop.
+It starts the product, waits for the endpoint, and then **opens the dump through that
+endpoint** — `mat_open`, not a launch argument, because Memory Analyzer's application reads no
+file from the command line. `--launcher.openFile` belongs to the IDE and does nothing here: it
+comes up listening, with no editor. The open call returns as soon as the dump is open, or says
+`parsing` after `AUSPEX_OPEN_WAIT` and leaves the parse running for the next `mat_open` to
+wait on. The workbench really runs, against `Xvfb`: panes open, `calcite` answers, and the
+tools behave as they do on a desktop.
 
-It also does what the preferences page would otherwise be needed for. The MCP server is **off
-by default** — a process that listens on a socket is opt-in — so the script enables it for one
-workspace by writing `…/.settings/com.vogella.eclipse.mcp.server.prefs`, and keeps the bearer
-token beside that workspace with `-Dcom.vogella.eclipse.mcp.tokenDirectory`, so a run cannot
-take over the token of the IDE its user is sitting in. The URL and the token are written to
+### 🧮 Heap
+
+The heap is the caller's to choose, and it is the one setting a large dump always needs:
+
+```bash
+AUSPEX_HEAP=40g auspex-headless.sh …            # the script's knob, default 8g
+./auspex -vmargs -Xmx40g                        # by hand, once
+-Xmx40g                                         # in auspex.ini, for every start
+```
+
+`auspex.ini` ships with `-Xmx1024m`, which is Memory Analyzer's own default and far too small
+for a real dump. Nothing here promises what a given dump needs — but as one measurement, a
+10.4 GB chunked-gz dump of 360 million objects **whose indexes already existed** opened in
+0.5 s and left the JVM holding 2.4 GB, having never re-read the dump. A first parse, which
+does read all of it, is the expensive case and the reason the ceiling is raised at all.
+
+The server needs no enabling — the product ships with it on. What the script does set is what
+a run must not share with the IDE its user is sitting in: its own port, and its own bearer
+token beside the workspace through `-Dcom.vogella.eclipse.mcp.tokenDirectory` rather than the
+one in `~/.eclipse`. The URL and that token are written to
 `<workspace>/.metadata/.plugins/com.vogella.eclipse.mcp.server/endpoint.json`.
 
 **`--launcher.openFile` needs `dbus-launch`.** The launcher hands the path to the instance over
