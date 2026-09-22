@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="Auspex Mortis" uid="hu.rxd.auspex.mortis.product" id="org.eclipse.mat.ui.rcp.MemoryAnalyzer"
+         application="org.eclipse.mat.ui.rcp.application" version="0.4.0.qualifier"
+         useFeatures="true" includeLaunchers="true" autoIncludeRequirements="true">
+
+   <configIni use="default">
+   </configIni>
+
+   <launcherArgs>
+      <!-- what a dump needs is measured per dump; this only has to be enough to start -->
+      <vmArgs>-Xmx1024m</vmArgs>
+   </launcherArgs>
+
+   <launcher name="auspex">
+   </launcher>
+
+   <vm>
+   </vm>
+
+   <plugins>
+   </plugins>
+
+   <features>
+      <feature id="org.eclipse.mat.ui.rcp.feature" installMode="root"/>
+      <feature id="org.eclipse.mat.chart.feature"/>
+      <feature id="MatCalciteFeature"/>
+      <feature id="com.vogella.eclipse.mcp.feature"/>
+      <feature id="org.eclipse.jgit"/>
+      <feature id="hu.rxd.auspex.mortis.feature"/>
+      <feature id="org.eclipse.rcp"/>
+      <feature id="org.eclipse.equinox.p2.user.ui"/>
+      <feature id="org.eclipse.help"/>
+   </features>
+
+   <configurations>
+      <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
+
+      <property name="cssTheme" value="org.eclipse.e4.ui.css.theme.e4_default" />
+      <property name="applicationCSSResources" value="platform:/plugin/org.eclipse.platform/images/" />
+      <property name="org.eclipse.update.reconcile" value="false" />
+   </configurations>
+
+</product>

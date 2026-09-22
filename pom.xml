@@ -21,6 +21,7 @@
     <module>tests</module>
     <module>features</module>
     <module>update-site</module>
+    <module>product/hu.rxd.auspex.mortis.product</module>
   </modules>
 
   <build>

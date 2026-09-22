@@ -13,7 +13,29 @@
          class it cannot share. -->
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
       <unit id="org.eclipse.mat.feature.feature.group" version="0.0.0"/>
+      <!-- Memory Analyzer as its own application, which is what the product is built on:
+           the standalone is MAT plus a workbench, not an IDE with MAT in it. -->
+      <unit id="org.eclipse.mat.ui.rcp.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.mat.chart.feature.feature.group" version="0.0.0"/>
       <repository location="https://download.eclipse.org/mat/1.17.0/update-site/"/>
+    </location>
+    <!-- Calcite. Optional for the update site, part of the product: an agent without
+         GROUP BY is reduced to bisecting thresholds by hand. -->
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="MatCalciteFeature.feature.group" version="0.0.0"/>
+      <repository location="https://vlsi.github.io/mat-calcite-plugin-update-site/stable/"/>
+    </location>
+    <!-- What a product needs beyond the platform: the native launcher, the p2 UI it
+         updates itself through, and help. -->
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.rcp.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.help.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.p2.user.ui.feature.group" version="0.0.0"/>
+      <!-- JGit, because the MCP server's feature carries git tools and a feature installs
+           whole: without it two of them are listed to an agent and throw when called. -->
+      <unit id="org.eclipse.jgit.feature.group" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/releases/2026-09/"/>
     </location>
     <!-- The MCP server whose tools extension point this plug-in contributes to. -->
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">

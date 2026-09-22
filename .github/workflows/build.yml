@@ -46,9 +46,23 @@ jobs:
             tests/*/target/work/data/.metadata/.log
           if-no-files-found: ignore
 
+      # one address installs everything: the site is a composite whose children are this
+      # build's own repository and the sites MAT, the MCP server and Calcite live on
+      - name: Compose the update site
+        run: .github/scripts/compose-site.sh update-site/hu.rxd.auspex.mortis.repository/target/repository site
+
       # the p2 repository in the shape GitHub Pages deploys; on a pull request it is
       # simply the build output, downloadable for trying the change
       - name: Package the update site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: update-site/hu.rxd.auspex.mortis.repository/target/repository
+          path: site
+
+      # Memory Analyzer with everything already in it, for a machine that has no Eclipse;
+      # the artifact's size is the archive's size, which is the cost this has to stay worth
+      - name: Keep the product archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: auspex-mortis-linux.gtk.x86_64
+          path: product/*/target/products/*.tar.gz
+          if-no-files-found: error

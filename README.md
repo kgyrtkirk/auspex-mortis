@@ -84,20 +84,43 @@ and the MCP server's own update site. Needs network on a cold cache, nothing els
 mvn clean verify
 ```
 
-Produces `update-site/hu.rxd.auspex.mortis.repository/target/repository`, a p2 repository, and runs
-the tests on the way.
+Produces two things, and runs the tests on the way:
+
+* `update-site/hu.rxd.auspex.mortis.repository/target/repository` — the p2 repository.
+* `product/hu.rxd.auspex.mortis.product/target/products/…tar.gz` — Memory Analyzer with
+  Calcite, the MCP server and these tools already installed, launcher `auspex`. 156 MB
+  packed, 176 MB unpacked, `linux/gtk/x86_64` only.
+
+`.github/scripts/compose-site.sh <repository> <dir>` lays the published site out: a p2
+composite whose children are that repository and the sites named in the target platform, so
+one address installs everything. It reads those children out of the target platform rather
+than repeating them, and marks the composite non-atomic, so a child that is down costs its
+own content and not the whole site.
 
 **MAT's version must match the IDE's.** The snapshot is handed over in process; a bundle
 compiled against a different MAT resolves and then fails on a class the two cannot share.
 
 ## 📥 Install
 
-**Update site: `https://kgyrtkirk.github.io/auspex-mortis/`** — published from `main` by
-GitHub Actions, so it always carries the last build that passed its tests.
+Two ways, and neither needs anything installed first.
 
-Needs, in the same IDE: the [Eclipse MCP server](https://vogellacompany.github.io/eclipse-mcp-server/)
-and Memory Analyzer **1.17**. The [Calcite plug-in](https://vlsi.github.io/mat-calcite-plugin-update-site/stable/)
-is optional; with it, `calcite "…"` queries open in its SQL editor pane.
+**The product** — unpack the archive and run `./auspex`. It is Memory Analyzer, with Calcite,
+the MCP server and these tools already in it, at the versions this build was tested against.
+It also answers headless, through MAT's own application, with no display:
+
+```bash
+./auspex -nosplash -consoleLog -data /scratch/ws -application org.eclipse.mat.api.parse dump.hprof
+./auspex -data /scratch/ws --launcher.openFile dump.hprof   # the workbench, and the endpoint with it
+```
+
+**Update site: `https://kgyrtkirk.github.io/auspex-mortis/`** — published from `main` by
+GitHub Actions, so it always carries the last build that passed its tests. It is a composite:
+adding that one address also gives the IDE
+[Memory Analyzer](https://download.eclipse.org/mat/1.17.0/update-site/) 1.17, the
+[Eclipse MCP server](https://vogellacompany.github.io/eclipse-mcp-server/) and the
+[Calcite plug-in](https://vlsi.github.io/mat-calcite-plugin-update-site/stable/), so a missing
+prerequisite is no longer a second trip. Calcite stays optional; with it, `calcite "…"`
+queries open in its SQL editor pane.
 
 By hand: *Help → Install New Software… → Add…* → the URL above → **Auspex Mortis**. Restart.
 
@@ -121,6 +144,29 @@ closes any open heap dump, because MAT's editor input cannot be persisted: reope
 
 The MCP client picks the new tools up when it reconnects. Its copy of a tool's schema can lag
 behind; that is harmless, because the server validates the arguments.
+
+## 🤖 Headless
+
+`product/hu.rxd.auspex.mortis.product/auspex-headless.sh <product-dir> <dump> [workspace]`
+starts the product with nobody watching and prints the endpoint to talk to it:
+
+```
+{"state":"listening","url":"http://127.0.0.1:8643/mcp","token":"…","workspace":"/scratch/ws"}
+```
+
+`AUSPEX_PORT`, `AUSPEX_HEAP`, `AUSPEX_DISPLAY` and `AUSPEX_WAIT` are its knobs. The workbench
+really runs, against `Xvfb`: panes open, `calcite` answers, and the tools behave as they do on
+a desktop.
+
+It also does what the preferences page would otherwise be needed for. The MCP server is **off
+by default** — a process that listens on a socket is opt-in — so the script enables it for one
+workspace by writing `…/.settings/com.vogella.eclipse.mcp.server.prefs`, and keeps the bearer
+token beside that workspace with `-Dcom.vogella.eclipse.mcp.tokenDirectory`, so a run cannot
+take over the token of the IDE its user is sitting in. The URL and the token are written to
+`<workspace>/.metadata/.plugins/com.vogella.eclipse.mcp.server/endpoint.json`.
+
+**`--launcher.openFile` needs `dbus-launch`.** The launcher hands the path to the instance over
+D-Bus; without it the file is dropped, the script says so, and `mat_open` is the way in.
 
 ## 📤 What `mat_extract` writes
 
