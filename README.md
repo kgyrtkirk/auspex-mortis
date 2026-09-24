@@ -1,3 +1,5 @@
+<img src="branding/auspex-mortis-wordmark.png" alt="Auspex Mortis" width="620">
+
 # 🜏 Auspex Mortis — MAT tools for the Eclipse MCP server
 
 Five MCP tools that open a Java heap dump in Memory Analyzer and answer questions about it
@@ -98,6 +100,24 @@ Produces two things, and runs the tests on the way:
 `hu.rxd.auspex.mortis.product.feature` exists to carry that script as a root file and nothing
 else: the plug-in's own feature stays free of it, so installing the tools into somebody's IDE
 never drops a shell script into their installation.
+
+### 🜏 Branding
+
+[`branding/`](branding/) holds the mark as SVG; the PNGs under
+[`plugins/hu.rxd.auspex.mortis/icons/`](plugins/hu.rxd.auspex.mortis/icons/) are rendered from
+it and wired to the product through `windowImages` and `aboutImage` in
+[plugin.xml](plugins/hu.rxd.auspex.mortis/plugin.xml), which is why the window, the task bar
+and *About Auspex Mortis* carry it.
+
+```bash
+inkscape branding/auspex-mortis-small.svg -o plugins/hu.rxd.auspex.mortis/icons/auspex-32.png -w 32
+inkscape branding/auspex-mortis.svg       -o plugins/hu.rxd.auspex.mortis/icons/auspex-256.png -w 256
+inkscape branding/auspex-mortis-wordmark.svg -o plugins/hu.rxd.auspex.mortis/icons/auspex-about.png -w 480
+```
+
+16 and 32 come from the simplified mark, because a twelve-tooth cog turns to porridge below
+48. The About banner is 480 wide, and an About image wider than 250 makes the workbench drop
+the `aboutText` beside it — the banner says the name instead, which is the trade taken here.
 
 `.github/scripts/compose-site.sh <repository> <dir>` lays the published site out: a p2
 composite whose children are that repository and the sites named in the target platform, so

@@ -9,6 +9,9 @@
          <property name="appName" value="Auspex Mortis"/>
          <property name="aboutText" value="Memory Analyzer with an MCP endpoint against the dump it has open."/>
          <property name="preferenceCustomization" value="plugin_customization.ini"/>
+         <!-- 16 and 32 are a simplified mark: the cog turns to porridge below 48 -->
+         <property name="windowImages" value="icons/auspex-16.png,icons/auspex-32.png,icons/auspex-48.png,icons/auspex-64.png,icons/auspex-128.png,icons/auspex-256.png"/>
+         <property name="aboutImage" value="icons/auspex-about.png"/>
       </product>
    </extension>
 

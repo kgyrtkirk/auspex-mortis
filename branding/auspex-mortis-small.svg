@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Auspex Mortis — the mark for 16 to 32 pixels, where the full one turns to porridge.
+  The cog becomes a plain ring, the brow sign and the teeth go, and the sockets keep their
+  ember: at this size those two dots are the whole recognition.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Auspex Mortis">
+  <title>Auspex Mortis</title>
+  <circle cx="32" cy="32" r="31" fill="#12141a"/>
+  <circle cx="32" cy="32" r="27" fill="none" stroke="#9a6b34" stroke-width="7"/>
+  <path d="M32 13c-10 0-17 7-17 17 0 6 2 10 5 12v5c0 2 2 4 4 4h16c2 0 4-2 4-4v-5
+           c3-2 5-6 5-12 0-10-7-17-17-17z" fill="#e8e3d6"/>
+  <circle cx="25" cy="30" r="5" fill="#0e1013"/>
+  <circle cx="39" cy="30" r="5" fill="#0e1013"/>
+  <circle cx="25" cy="30" r="2.4" fill="#e2622a"/>
+  <circle cx="39" cy="30" r="2.4" fill="#e2622a"/>
+  <rect x="27" y="43" width="10" height="4" rx="1.5" fill="#0e1013"/>
+</svg>
