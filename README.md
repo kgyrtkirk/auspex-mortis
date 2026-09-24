@@ -174,8 +174,8 @@ adding that one address also gives the IDE
 [Memory Analyzer](https://download.eclipse.org/mat/1.17.0/update-site/) 1.17, the
 [Eclipse MCP server](https://vogellacompany.github.io/eclipse-mcp-server/) and the
 [Calcite plug-in](https://vlsi.github.io/mat-calcite-plugin-update-site/stable/), so a missing
-prerequisite is no longer a second trip. Calcite stays optional; with it, `calcite "…"`
-queries open in its SQL editor pane.
+prerequisite is no longer a second trip. Calcite is required, like the other two: with it,
+`calcite "…"` queries answer and open in its SQL editor pane.
 
 Installed this way the MCP server keeps **its own default, which is off**: a plug-in that
 starts listening on a socket in an IDE somebody else set up is a surprise, so turn it on under

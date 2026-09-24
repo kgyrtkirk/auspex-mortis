@@ -19,7 +19,7 @@
       <unit id="org.eclipse.mat.chart.feature.feature.group" version="0.0.0"/>
       <repository location="https://download.eclipse.org/mat/1.17.0/update-site/"/>
     </location>
-    <!-- Calcite. Optional for the update site, part of the product: an agent without
+    <!-- Calcite. Required by the tools' feature and part of the product: an agent without
          GROUP BY is reduced to bisecting thresholds by hand. -->
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
       <unit id="MatCalciteFeature.feature.group" version="0.0.0"/>
