@@ -1,18 +1,20 @@
 #!/bin/bash
 # Lays out what gets published: a p2 composite whose children are this build's own
 # repository and the sites it resolves against, so that adding one URL to an IDE brings
-# Memory Analyzer, the MCP server and Calcite along with these tools.
+# Memory Analyzer, the MCP server and Calcite along with these tools. The product archive sits
+# beside it, linked from index.html, for a machine that has no Eclipse.
 #
 # The children are read out of the target platform rather than written here twice: the
 # repositories this was built against are the repositories it must be installed from. The
 # release train is excluded - an IDE already has the platform, and offering the whole
 # SimRel through this site would say nothing true about it.
 #
-#   .github/scripts/compose-site.sh update-site/*/target/repository site
+#   .github/scripts/compose-site.sh update-site/*/target/repository site product/*/target/products/*.tar.gz
 set -euo pipefail
 
 repository=${1:?the built p2 repository to publish}
 site=${2:?the directory to lay the published site out in}
+product=${3:?the product archive to publish beside it}
 target=target-platform/hu.rxd.auspex.mortis.target/hu.rxd.auspex.mortis.target.target
 
 mapfile -t children < <(grep -o 'location="[^"]*"' "$target" | sed 's/^location="//; s/"$//' \
@@ -25,6 +27,19 @@ fi
 rm -rf "$site"
 mkdir -p "$site/auspex"
 cp -r "$repository"/. "$site/auspex/"
+cp "$product" "$site/"
+
+archive=$(basename "$product")
+cat >"$site/index.html" <<EOF
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Auspex Mortis</title></head>
+<body>
+<h1>Auspex Mortis</h1>
+<p><a href="$archive">$archive</a></p>
+</body>
+</html>
+EOF
 
 # milliseconds, as p2 writes it: a client tells a changed composite from a cached one by
 # this value alone

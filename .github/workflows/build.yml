@@ -50,7 +50,7 @@ jobs:
       # one address installs everything: the site is a composite whose children are this
       # build's own repository and the sites MAT, the MCP server and Calcite live on
       - name: Compose the update site
-        run: .github/scripts/compose-site.sh update-site/hu.rxd.auspex.mortis.repository/target/repository site
+        run: .github/scripts/compose-site.sh update-site/hu.rxd.auspex.mortis.repository/target/repository site product/*/target/products/*.tar.gz
 
       # the p2 repository in the shape GitHub Pages deploys; on a pull request it is
       # simply the build output, downloadable for trying the change

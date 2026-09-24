@@ -119,11 +119,12 @@ inkscape branding/auspex-mortis-wordmark.svg -o plugins/hu.rxd.auspex.mortis/ico
 48. The About banner is 480 wide, and an About image wider than 250 makes the workbench drop
 the `aboutText` beside it — the banner says the name instead, which is the trade taken here.
 
-`.github/scripts/compose-site.sh <repository> <dir>` lays the published site out: a p2
+`.github/scripts/compose-site.sh <repository> <dir> <product>` lays the published site out: a p2
 composite whose children are that repository and the sites named in the target platform, so
 one address installs everything. It reads those children out of the target platform rather
 than repeating them, and marks the composite non-atomic, so a child that is down costs its
-own content and not the whole site.
+own content and not the whole site. The product archive is published beside it, linked from
+the site's `index.html`.
 
 ### 🔢 Versions
 
