@@ -12,8 +12,8 @@ They ship two ways: as a plug-in for an IDE that already has Memory Analyzer, an
 **product** — Memory Analyzer with Calcite, the MCP server and these tools already in it,
 which also runs with nobody watching and hands an agent an endpoint against a dump.
 
-Home: <https://github.com/kgyrtkirk/auspex-mortis> · update site:
-`https://kgyrtkirk.github.io/auspex-mortis/`
+* Home: <https://github.com/kgyrtkirk/auspex-mortis>
+* Update site: <https://kgyrtkirk.github.io/auspex-mortis/>
 
 ## 🎯 Why
 
